@@ -14,7 +14,7 @@ module.exports.handleError = (err, res) => {
   }
 
   if (err instanceof mongoose.Error.CastError) {
-    return res.status(NOT_FOUND).send({ message: 'Объект с таким id не найден' });
+    return res.status(BAD_REQUEST).send({ message: 'Объект с таким id не найден' });
   }
 
   return res.status(INTERVAL_SERVER_ERROR).send({ message: 'Произошла ошибка' });
