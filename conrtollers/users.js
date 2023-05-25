@@ -1,7 +1,6 @@
+const mongoose = require('mongoose');
 const User = require('../models/user');
 const { handleError } = require('../errors/errors');
-const DocumentNotFoundError = require('../errors/DocumentNotFoundError');
-const ValidationError = require('../errors/ValidationError');
 
 module.exports.getUsers = (req, res) => {
   User.find()
@@ -17,17 +16,13 @@ module.exports.getUser = (req, res) => {
       if (user) {
         return res.send({ data: user });
       }
-      throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
+      throw new mongoose.Error.DocumentNotFoundError('Запрашиваемый пользователь не найден');
     })
     .catch((err) => handleError(err, res));
 };
 
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
-
-  if (!(name && about && avatar)) {
-    throw new ValidationError('Переданы некорректные данные при создании пользователя');
-  }
 
   User.create({ name, about, avatar })
     .then((user) => res.send({ data: user }))
@@ -38,21 +33,12 @@ module.exports.updateUser = (req, res) => {
   const { name, about } = req.body;
   const { _id } = req.user;
 
-  if (!(name && about)) {
-    throw new ValidationError('Переданы некорректные данные');
-  }
-
   User.findByIdAndUpdate(
     _id,
     { name, about },
-    { new: true },
+    { new: true, runValidators: true },
   )
-    .then((user) => {
-      if (user) {
-        return res.send({ data: user });
-      }
-      throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
-    })
+    .then((user) => res.send({ data: user }))
     .catch((err) => handleError(err, res));
 };
 
@@ -60,20 +46,11 @@ module.exports.updateUserAvatar = (req, res) => {
   const { avatar } = req.body;
   const { _id } = req.user;
 
-  if (!avatar) {
-    throw new ValidationError('Переданы некорректные данные');
-  }
-
   User.findByIdAndUpdate(
     _id,
     { avatar },
-    { new: true },
+    { new: true, runValidators: true },
   )
-    .then((user) => {
-      if (user) {
-        return res.send({ data: user });
-      }
-      throw new DocumentNotFoundError('Запрашиваемый пользователь не найден');
-    })
+    .then((user) => res.send({ data: user }))
     .catch((err) => handleError(err, res));
 };
