@@ -4,13 +4,6 @@ const cards = require('./cards');
 
 const NOT_FOUND = 404;
 
-router.use((req, res, next) => {
-  req.user = {
-    _id: '646e53e0289c0631a4c0985a',
-  };
-  next();
-});
-
 router.use('/users', users);
 router.use('/cards', cards);
 router.use('/*', (req, res) => {
