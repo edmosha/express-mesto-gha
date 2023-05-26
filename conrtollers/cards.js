@@ -2,11 +2,15 @@ const mongoose = require('mongoose');
 const Card = require('../models/card');
 const { handleError } = require('../errors/errors');
 
-const checkIsCardNull = (card, res, data = card) => {
-  if (card) {
-    return res.send({ data });
-  }
-  throw new mongoose.Error.DocumentNotFoundError('Запрашиваемая карточка не найдена');
+const handleCardLike = (req, res, data) => {
+  Card.findByIdAndUpdate(
+    req.params.cardId,
+    data,
+    { new: true, runValidators: true },
+  )
+    .orFail(new mongoose.Error.DocumentNotFoundError('Запрашиваемая карточка не найдена'))
+    .then((card) => res.send({ data: card }))
+    .catch((err) => handleError(err, res));
 };
 
 module.exports.getCards = (req, res) => {
@@ -26,26 +30,15 @@ module.exports.createCard = (req, res) => {
 
 module.exports.deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then((card) => checkIsCardNull(card, res, 'Карточка успешно удалена'))
+    .orFail(new mongoose.Error.DocumentNotFoundError('Запрашиваемая карточка не найдена'))
+    .then(() => res.send({ data: 'Карточка успешно удалена' }))
     .catch((err) => handleError(err, res));
 };
 
 module.exports.likeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $addToSet: { likes: req.user._id } },
-    { new: true, runValidators: true },
-  )
-    .then((card) => checkIsCardNull(card, res))
-    .catch((err) => handleError(err, res));
+  handleCardLike(req, res, { $addToSet: { likes: req.user._id } });
 };
 
 module.exports.dislikeCard = (req, res) => {
-  Card.findByIdAndUpdate(
-    req.params.cardId,
-    { $pull: { likes: req.user._id } },
-    { new: true, runValidators: true },
-  )
-    .then((card) => checkIsCardNull(card, res))
-    .catch((err) => handleError(err, res));
+  handleCardLike(req, res, { $pull: { likes: req.user._id } });
 };
