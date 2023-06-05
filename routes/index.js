@@ -1,11 +1,11 @@
 const router = require('express').Router();
+const { errors } = require('celebrate');
 const users = require('./users');
 const cards = require('./cards');
 const signin = require('./signin');
 const signup = require('./signup');
 const auth = require('../middlewares/auth');
 const errorsGlobal = require('../middlewares/errors');
-const { errors } = require('celebrate');
 
 const NOT_FOUND = 404;
 

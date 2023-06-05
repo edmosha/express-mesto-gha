@@ -31,7 +31,9 @@ module.exports.createUser = (req, res, next) => {
       about,
       avatar,
     }))
-    .then((user) => res.send({ data: user }))
+    .then((user) => res.send({
+      data: user.toObject({ useProjection: true }),
+    }))
     .catch(next);
 };
 

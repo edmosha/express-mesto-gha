@@ -4,10 +4,8 @@ const BAD_REQUEST = 400;
 const INTERVAL_SERVER_ERROR = 500;
 const CONFLICTING_REQUEST = 409;
 
-module.exports = (err, req, res, next) => {
+module.exports = (err, req, res) => {
   const { statusCode = INTERVAL_SERVER_ERROR, message } = err;
-  
-  console.log(err)
 
   if (err instanceof mongoose.Error.ValidationError) {
     return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });

@@ -23,7 +23,7 @@ module.exports.deleteCard = (req, res, next) => {
   Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
     .populate('owner')
     .orFail(new ForbiddenError('Недостаточно прав'))
-    .then((card) => res.send({ data: 'Карточка успешно удалена' }))
+    .then(() => res.send({ data: 'Карточка успешно удалена' }))
     .catch(next);
 };
 
