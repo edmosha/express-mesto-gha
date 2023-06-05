@@ -1,48 +1,87 @@
-const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { handleError } = require('../errors/errors');
+const DocumentNotFoundError = require('../errors/DocumentNotFoundError');
+
+module.exports.getUsers = (req, res, next) => {
+  User.find()
+    .then((user) => res.send({ data: user }))
+    .catch(next);
+};
+
+module.exports.getUser = (req, res, next) => {
+  const { userId } = req.params;
+
+  User.findById(userId)
+    .orFail(new DocumentNotFoundError('Запрашиваемый пользователь не найден'))
+    .then((user) => res.send({ data: user }))
+    .catch(next);
+};
+
+module.exports.createUser = (req, res, next) => {
+  const {
+    email, password, name, about, avatar,
+  } = req.body;
+
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      email,
+      password: hash,
+      name,
+      about,
+      avatar,
+    }))
+    .then((user) => res.send({ data: user }))
+    .catch(next);
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+  const { JWT_SECRET } = process.env;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign(
+        { _id: user._id },
+        JWT_SECRET,
+        { expiresIn: '7d' },
+      );
+      res
+        .cookie('jwt', token, {
+          maxAge: 3600000 * 24 * 7,
+          httpOnly: true,
+          // sameSite: true,
+        });
+      res.send({ token });
+    })
+    .catch(next);
+};
+
+module.exports.getAboutMe = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      res.send(user);
+    })
+    .catch(next);
+};
 
 const updateUser = (req, res, data) => {
   const { _id } = req.user;
 
-  User.findByIdAndUpdate(
+  return User.findByIdAndUpdate(
     _id,
     data,
     { new: true, runValidators: true },
   )
-    .then((user) => res.send({ data: user }))
-    .catch((err) => handleError(err, res));
+    .then((user) => res.send({ data: user }));
 };
 
-module.exports.getUsers = (req, res) => {
-  User.find()
-    .then((user) => res.send({ data: user }))
-    .catch((err) => handleError(err, res));
-};
-
-module.exports.getUser = (req, res) => {
-  const { userId } = req.params;
-
-  User.findById(userId)
-    .orFail(new mongoose.Error.DocumentNotFoundError('Запрашиваемый пользователь не найден'))
-    .then((user) => res.send({ data: user }))
-    .catch((err) => handleError(err, res));
-};
-
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-
-  User.create({ name, about, avatar })
-    .then((user) => res.send({ data: user }))
-    .catch((err) => handleError(err, res));
-};
-
-module.exports.updateUserData = (req, res) => {
+module.exports.updateUserData = (req, res, next) => {
   const { name, about } = req.body;
-  updateUser(req, res, { name, about });
+  updateUser(req, res, { name, about }).catch(next);
 };
 
-module.exports.updateUserAvatar = (req, res) => {
+module.exports.updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
-  updateUser(req, res, { avatar });
+  updateUser(req, res, { avatar }).catch(next);
 };
