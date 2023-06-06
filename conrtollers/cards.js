@@ -20,10 +20,17 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCard = (req, res, next) => {
-  Card.findOneAndDelete({ _id: req.params.cardId, owner: req.user._id })
-    .populate('owner')
-    .orFail(new ForbiddenError('Недостаточно прав'))
-    .then(() => res.send({ data: 'Карточка успешно удалена' }))
+  const { cardId } = req.params;
+
+  Card.findById(cardId)
+    .orFail(new DocumentNotFoundError('Запрашиваемая карточка не найдена'))
+    .then((card) => {
+      if (!card.owner.equals(req.user._id)) {
+        return Promise.reject(new ForbiddenError('Недостаточно прав'));
+      }
+      return Card.findByIdAndDelete(cardId)
+        .then(() => res.send({ data: 'Карточка успешно удалена' }));
+    })
     .catch(next);
 };
 
