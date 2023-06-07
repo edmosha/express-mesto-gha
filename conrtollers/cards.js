@@ -37,7 +37,7 @@ module.exports.deleteCard = (req, res, next) => {
 const handleCardLike = (req, res, data) => Card.findByIdAndUpdate(
   req.params.cardId,
   data,
-  { new: true, runValidators: true },
+  { new: true },
 )
   .populate('owner')
   .populate('likes')

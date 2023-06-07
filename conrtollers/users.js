@@ -34,7 +34,12 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => res.send({
       data: user.toObject({ useProjection: true }),
     }))
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        return res.status(409).send({ message: 'Пользователь с таким email уже зарегистрирован' });
+      }
+      return next(err);
+    });
 };
 
 module.exports.login = (req, res, next) => {
