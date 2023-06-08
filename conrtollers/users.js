@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const DocumentNotFoundError = require('../errors/DocumentNotFoundError');
+const ConflictError = require('../errors/ConflictError');
 
 module.exports.getUsers = (req, res, next) => {
   User.find()
@@ -36,10 +37,11 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === 11000) {
-        return res.status(409).send({ message: 'Пользователь с таким email уже зарегистрирован' });
+        return Promise.reject(new ConflictError('Пользователь с таким email уже зарегистрирован'));
       }
-      return next(err);
-    });
+      return err;
+    })
+    .catch(next);
 };
 
 module.exports.login = (req, res, next) => {
