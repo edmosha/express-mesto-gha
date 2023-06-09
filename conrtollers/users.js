@@ -37,11 +37,10 @@ module.exports.createUser = (req, res, next) => {
     }))
     .catch((err) => {
       if (err.code === 11000) {
-        return Promise.reject(new ConflictError('Пользователь с таким email уже зарегистрирован'));
+        return next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
       }
-      return err;
+      return next(err);
     })
-    .catch(next);
 };
 
 module.exports.login = (req, res, next) => {
