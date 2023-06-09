@@ -40,7 +40,7 @@ module.exports.createUser = (req, res, next) => {
         return next(new ConflictError('Пользователь с таким email уже зарегистрирован'));
       }
       return next(err);
-    })
+    });
 };
 
 module.exports.login = (req, res, next) => {
